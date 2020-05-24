@@ -21,6 +21,7 @@
                     :key="'workout_set_list_item_' + index"
                     :workoutExerciseSet="workoutExerciseSet"
                     :setNumber="index + 1"
+                    @click="onClickEditSet(workoutExerciseSet)"
                 />
             </AppList>
         </div>
@@ -37,17 +38,30 @@
 
         <div class="form-group" v-if="selectedExercise">
             <hr />
-            <AppButton
-                class="btn-main"
-                type="button"
-                v-if="!isSaving"
-                @click="onClickAddSet"
-            >
-                Add Set
-            </AppButton>
+            <div v-if="!isSaving">
+                <div class="form-group">
+                <AppButton
+                        class="btn-main"
+                        type="button"
+                        @click="onClickAddSet"
+                    >
+                        Add Set
+                    </AppButton>
+                </div>
+                <div class="form-group">
+                    <AppButton
+                        class="btn-default"
+                        type="button"
+                        @click="onClickBack"
+                    >
+                        Go Back
+                    </AppButton>
+                </div>
+            </div>
             <p v-else class="text-center">
                 <i class="fa fa-spinner fa-spin" aria-label="Loading" />
             </p>
+
         </div>
 
         <AppModal v-if="selectedExercise === 0" @close="onCloseAddNewExercise">
@@ -102,6 +116,9 @@ export default {
         };
     },
     methods: {
+        onClickBack() {
+            this.$router.push("/workout/" + this.$route.params.workoutId);
+        },
         handleRouteChange() {
             if(this.workoutExerciseId === undefined)
             {
@@ -113,8 +130,7 @@ export default {
             }
 
             let workoutExercise = this.$store.getters.getWorkoutExerciseById(this.workoutExerciseId);
-            console.log(this.workoutExerciseId);
-            console.log(workoutExercise);
+
             if(workoutExercise !== undefined)
             {
                 // Found already loaded version - don't need to call api
@@ -126,7 +142,7 @@ export default {
 
             // Need to load from api
             this.isLoading = true;
-            this.$store.dispatch("loadWorkoutExercise", this.workoutExerciseId).then(workoutExercise => {
+            this.$store.dispatch("loadWorkoutExerciseById", this.workoutExerciseId).then(workoutExercise => {
                 this.workoutExercise     = workoutExercise;
                 this.selectedExercise    = workoutExercise.exercise.id;
                 this.workoutExerciseSets = workoutExercise.workoutExerciseSets;
@@ -183,7 +199,10 @@ export default {
             this.selectedExercise = "";
         },
         onClickAddSet() {
-            this.$router.push("/workout/" + this.$route.params.workoutId + "/exercise/" + this.workoutExerciseId + "/set")
+            this.$router.push("/workout/" + this.$route.params.workoutId + "/exercise/" + this.workoutExerciseId + "/set");
+        },
+        onClickEditSet(workoutExerciseSet) {
+            this.$router.push("/workout/" + this.$route.params.workoutId + "/exercise/" + this.workoutExerciseId + "/set/" + workoutExerciseSet.id);
         }
     },
     computed: {

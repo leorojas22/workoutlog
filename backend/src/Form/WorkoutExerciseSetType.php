@@ -6,7 +6,7 @@ use App\Entity\WorkoutExerciseSet;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 
-class UpdateWorkoutExerciseSetType extends BaseAbstractType
+class WorkoutExerciseSetType extends BaseAbstractType
 {
     protected $className = WorkoutExerciseSet::class;
 

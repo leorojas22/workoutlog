@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Helper\AuthToken;
 use App\Helper\JwtHelper;
 use App\Repository\UserRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,10 +20,12 @@ class JwtAuthenticator extends AbstractGuardAuthenticator
 {
     private $userRepository;
     private $user;
+    private $logger;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepository $userRepository, LoggerInterface $logger)
     {
         $this->userRepository = $userRepository;
+        $this->logger = $logger;
     }
 
     public function supports(Request $request)
@@ -32,26 +35,38 @@ class JwtAuthenticator extends AbstractGuardAuthenticator
 
     public function getCredentials(Request $request)
     {
+
         // Read the JWT and try to get the user's id
         $jwtToken  = $request->cookies->get("jwt");
 
         $verified = JwtHelper::verifyJWT($jwtToken);
+
         if($verified)
         {
             return $verified;
         }
 
-        die;
         throw new CustomUserMessageAuthenticationException("Access Denied - 1");
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
-        if(!$this->user = $this->userRepository->findOneBy(['id' => $credentials]))
+        $startTime = microtime(true);
+        $this->logger->info("Start get user");
+        $endTime = microtime(true);
+        $this->logger->info("End get user: " . ($endTime-$startTime));
+        $this->logger->info($credentials);
+        $user = $this->userRepository->findOneBy(['id' => $credentials]);
+        $endTime = microtime(true);
+        $this->logger->info("End get user: " . ($endTime-$startTime));
+
+        if(!$user)
         {
             throw new CustomUserMessageAuthenticationException("Access Denied - 2");
         }
 
+
+        $this->user = $user;
         return $this->user;
     }
 

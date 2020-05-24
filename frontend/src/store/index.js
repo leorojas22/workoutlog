@@ -135,9 +135,16 @@ const actions = {
             return Promise.reject(err.response.data.message);
         });
     },
+    loadWorkoutById({ dispatch }, workoutId) {
+        return Api.workout.get(workoutId).then(response => {
+            return dispatch("addWorkout", response.data);
+        })
+        .catch(err => {
+            return Promise.reject(err.response.data.message);
+        });
+    },
     addWorkoutExercise({ commit, state, getters }, workoutExercise) {
         let existingWorkoutExercises = getCopy(state.workoutExercises);
-        console.log(existingWorkoutExercises);
 
         let foundWorkoutExerciseIndex = existingWorkoutExercises.findIndex(existingWorkoutExercise => {
             return existingWorkoutExercise.id === workoutExercise.id;
@@ -172,7 +179,7 @@ const actions = {
             console.error(err);
         });
     },
-    loadWorkoutExercise({ dispatch }, workoutExerciseId) {
+    loadWorkoutExerciseById({ dispatch }, workoutExerciseId) {
         return Api.workoutExercise.get(workoutExerciseId).then(response => {
             return dispatch("addWorkoutExercise", response.data);
         })
@@ -180,18 +187,73 @@ const actions = {
             return Promise.reject(err.response.data.message);
         });
     },
+    addWorkoutExerciseSet({ commit, state }, payload) {
+        // Find the workout exercise for this set
+        let existingWorkoutExercises = getCopy(state.workoutExercises);
+
+        let foundWorkoutExerciseIndex = existingWorkoutExercises.findIndex(existingWorkoutExercise => {
+            return parseInt(existingWorkoutExercise.id) === parseInt(payload.workoutExerciseId);
+        });
+
+        if(foundWorkoutExerciseIndex === -1)
+        {
+            // Should not happen. Nothing to add, can't find the exercise
+            console.log(payload);
+            throw new Error("Unable to find exercise for set.");
+        }
+
+        // Check to see if this set already exists in the workout
+        let foundSetIndex = existingWorkoutExercises[foundWorkoutExerciseIndex].workoutExerciseSets.findIndex(existingSet => {
+            return parseInt(existingSet.id) === parseInt(payload.workoutExerciseSet.id);
+        });
+
+        if(foundSetIndex === -1)
+        {
+            // Add to start of exercises
+            existingWorkoutExercises[foundWorkoutExerciseIndex].workoutExerciseSets.push(payload.workoutExerciseSet);
+        }
+        else
+        {
+            // Update existing
+            existingWorkoutExercises[foundWorkoutExerciseIndex].workoutExerciseSets[foundSetIndex] = payload.workoutExerciseSet;
+        }
+
+        commit(SET_WORKOUT_EXERCISES, existingWorkoutExercises);
+        return Promise.resolve(payload.workoutExerciseSet);
+    },
+    saveWorkoutExerciseSet({ dispatch, getters }, payload) {
+        return Api.workoutExerciseSet.save(payload.workoutExerciseId, {
+            statNotes: payload.statNotes,
+            notes: payload.notes,
+            id: payload.id
+        }).then(response => {
+            // Add workout exercise set to the workout exercise
+            return dispatch("addWorkoutExerciseSet", {
+                workoutExerciseId: payload.workoutExerciseId,
+                workoutExerciseSet: response.data
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            return Promise.reject(err.response.data.message);
+        });
+    }
 
 };
 
 const getters = {
+    getWorkoutById(state) {
+        return (id) => {
+            return state.workouts.find(workout => {
+                return workout.id === parseInt(id);
+            });
+        };
+    },
     getWorkoutExerciseById(state) {
         return (id) => {
             // Check to see if the workout exercise is stored already
             return state.workoutExercises.find(workoutExercise => {
-                if(workoutExercise.id === parseInt(id))
-                {
-                    return workoutExercise;
-                }
+                return workoutExercise.id === parseInt(id);
             });
         };
     }

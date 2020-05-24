@@ -126,12 +126,12 @@ class AuthToken
      * @param array $tokenData
      * @return string
      */
-    protected function encodeToken(array $tokenData): string
+    protected static function encodeToken(array $tokenData): string
     {
         return base64_encode(json_encode($tokenData));
     }
 
-    protected function decodeToken(string $encodedData): AuthToken
+    protected static function decodeToken(string $encodedData): AuthToken
     {
         $tokenData = json_decode(base64_decode($encodedData), true);
 

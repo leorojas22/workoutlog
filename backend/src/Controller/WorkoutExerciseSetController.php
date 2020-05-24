@@ -3,8 +3,8 @@ namespace App\Controller;
 
 use App\Entity\WorkoutExercise;
 use App\Entity\WorkoutExerciseSet;
+use App\Form\WorkoutExerciseSetType;
 use App\Exception\AccessDeniedException;
-use App\Form\UpdateWorkoutExerciseSetType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -21,7 +21,7 @@ class WorkoutExerciseSetController extends BaseRestController
     /**
      * @Route("/workout-exercise/{id}/set", name="app_workout_exercise_set_add", methods={"POST"})
      */
-    public function addSet(WorkoutExercise $workoutExercise)
+    public function addSet(WorkoutExercise $workoutExercise, Request $request)
     {
         // Make sure the workout exercise belongs to the logged in user
         if(!$workoutExercise->belongsTo($this->getUser()))
@@ -31,9 +31,9 @@ class WorkoutExerciseSetController extends BaseRestController
 
         // Create a new set
         $workoutSet = new WorkoutExerciseSet($workoutExercise);
-        $this->restService->saveEntity($workoutSet);
+        $form = $this->createForm(WorkoutExerciseSetType::class, $workoutSet);
 
-        return $this->restService->respond($workoutSet);
+        return $this->restService->handleFormRequest($request, $form);
     }
 
     /**
@@ -47,7 +47,7 @@ class WorkoutExerciseSetController extends BaseRestController
             throw new AccessDeniedException();
         }
 
-        $form = $this->createForm(UpdateWorkoutExerciseSetType::class, $workoutSet);
+        $form = $this->createForm(WorkoutExerciseSetType::class, $workoutSet);
 
         return $this->restService->handleFormRequest($request, $form);
     }
@@ -70,7 +70,7 @@ class WorkoutExerciseSetController extends BaseRestController
 
     /**
      * @Route("/workout-exercise/{workoutExerciseId}/set/{workoutExerciseSetId}", name="app_workout_exercise_set_get", methods={"GET"})
-     * @ParamConverter("workoutSet", options={"mapping": {"workoutExerciseSetId": "id", "workoutExerciseId": "workoutExercise"}})
+     * @ParamConverter("workoutExerciseSet", options={"mapping": {"workoutExerciseSetId": "id", "workoutExerciseId": "workoutExercise"}})
      */
     public function getSet(WorkoutExerciseSet $workoutExerciseSet)
     {

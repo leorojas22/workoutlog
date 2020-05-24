@@ -1,5 +1,5 @@
 <template>
-    <AppListItem class="app-list-item-workout-set-component">
+    <AppListItem class="app-list-item-workout-set-component" @click="onClick">
         <div class="set-details-wrapper">
             <div class="set-number">{{ setNumber }}.</div>
             <div class="set-stats">
@@ -29,6 +29,9 @@ export default {
         }
     },
     methods: {
+        onClick(e) {
+            this.$emit("click", e);
+        },
         getFormattedWorkoutExerciseSets(workoutExerciseSet) {
             // Format set stats to show in the UI, returns an array of strings that can be displayed
             let formattedSets = [];
