@@ -1,5 +1,5 @@
 <template>
-    <section class="app-dashboard-page">
+    <section class="app-dashboard-page container">
         <AppButton class="btn-main" type="button" :isLoading="isStartingNewWorkout" @click="onStartNewWorkoutClick">
             Start New Workout
         </AppButton>
@@ -9,30 +9,13 @@
         </p>
         <AppList :interactive="true">
             <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
-            />
-            <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
-            />
-            <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
-            />
-            <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
-            />
-            <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
-            />
-            <AppListItemPastWorkout
-                :workoutId="1"
-                :date="new Date()"
+                v-for="(workout, index) in workouts"
+                :key="index"
+                :workout="workout"
+                @click="onClickExistingWorkout"
             />
         </AppList>
+        <AppLoadingMessage v-if="isLoadingWorkouts" />
     </section>
 </template>
 
@@ -46,12 +29,40 @@ export default {
         AppListItemPastWorkout,
         AppList
     },
+    beforeMount() {
+        // Load previous workouts
+        this.loadMoreWorkouts();
+    },
     data() {
         return {
-            isStartingNewWorkout: false
+            isStartingNewWorkout: false,
+            pageNumber: 0,
+            nextPageNumber: 1,
+            isLoadingWorkouts: false
         };
     },
     methods: {
+        onClickExistingWorkout(workoutId) {
+            this.$router.push("/workout/" + workoutId);
+        },
+        loadMoreWorkouts() {
+
+            if(this.nextPageNumber === null)
+            {
+                return;
+            }
+
+            this.isLoadingWorkouts = true;
+            this.$store.dispatch("getWorkoutCollection", this.nextPageNumber).then(response => {
+                this.nextPageNumber = response.pagination.nextPage;
+                this.pageNumber     = response.pagination.currentPage;
+                this.isLoadingWorkouts = false;
+            })
+            .catch(err => {
+                console.error(err);
+                this.isLoadingWorkouts = false;
+            });
+        },
         onStartNewWorkoutClick(e) {
             e.preventDefault();
 
@@ -66,6 +77,11 @@ export default {
                 console.error(err);
                 this.isStartingNewWorkout = false;
             })
+        }
+    },
+    computed: {
+        workouts() {
+            return this.$store.state.workouts;
         }
     }
 }

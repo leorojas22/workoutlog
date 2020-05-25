@@ -1,5 +1,5 @@
 <template>
-    <section class="app-workout-exercise-set-page" v-if="!isLoading">
+    <section class="app-workout-exercise-set-page container" v-if="!isLoading">
         <h2 class="text-center">
             {{ id ? "Edit" : "Add" }} Set #{{ setNumber }}
         </h2>

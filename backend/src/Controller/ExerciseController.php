@@ -2,11 +2,13 @@
 namespace App\Controller;
 
 use App\Entity\Exercise;
-use App\Exception\AccessDeniedException;
 use App\Form\ExerciseType;
 use App\Helper\FormValidator;
-use App\Repository\ExerciseRepository;
 use App\Service\RestApiService;
+use App\Service\RestApiCollection;
+use App\Repository\ExerciseRepository;
+use App\Exception\AccessDeniedException;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,6 +20,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  */
 class ExerciseController extends BaseRestController
 {
+
+    public function __construct(RestApiService $restApiService, EntityManagerInterface $em)
+    {
+        parent::__construct($restApiService, $em);
+        $this->softDeleteablefilter->enableForEntity('App\Entity\Exercise');
+    }
 
     /**
      * @Route("/exercise", name="app_exercise_create", methods={"POST"})
@@ -76,10 +84,18 @@ class ExerciseController extends BaseRestController
     /**
      * @Route("/exercise", name="app_excercise_get_collection", methods={"GET"})
      */
-    public function getExercises(ExerciseRepository $exerciseRepository)
+    public function getExercises(ExerciseRepository $exerciseRepository, Request $request)
     {
-        $exercises = $exerciseRepository->findBy(['user' => $this->getUser()]);
+        $pageNumber = (int) ($request->query->get("page") ?: 1);
+        $exerciseCollection = new RestApiCollection($exerciseRepository);
+        $exerciseCollection
+            ->setCriteria(['user' => $this->getUser()])
+            ->setOrderBy(['name' => 'ASC'])
+            ->setLimit(0)
+            ->setPage($pageNumber)
+        ;
 
-        return $this->restService->respond($exercises);
+
+        return $this->restService->respond($exerciseCollection->getResponseArray());
     }
 }

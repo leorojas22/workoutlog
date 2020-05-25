@@ -1,5 +1,5 @@
 <template>
-    <section class="app-login-page">
+    <section class="app-login-page container">
         <h2>Log In</h2>
         <div class="notification error" v-if="errorMessage">
             {{ errorMessage }}
@@ -49,8 +49,8 @@ export default {
                 password: this.password
             })
             .then(response => {
-                console.log(response);
                 this.isLoggingIn = false;
+                this.$router.push("/");
             })
             .catch(err => {
                 let errorMessage = "Unable to login at this time.";

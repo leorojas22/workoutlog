@@ -4,17 +4,18 @@
             <h1>
                 Workout Log
             </h1>
+            <AppMenuOptions />
         </header>
         <router-view></router-view>
     </div>
 </template>
 
 <script>
-
+import AppMenuOptions from '@/components/AppMenuOptions';
 export default {
     name: 'App',
     components: {
-
+        AppMenuOptions
     }
 }
 </script>
@@ -61,19 +62,33 @@ export default {
 
     header h1 {
         font-size: 2.67em;
+        margin-bottom: 0px;
+    }
+
+    h3, .h3 {
+        font-size: 1.25em;
+    }
+
+    strong.bolder {
+        font-weight: 800;
     }
 
     section {
-        position: relative;
-        margin-left: auto;
-        margin-right: auto;
-        width: 95%;
-        max-width: 720px;
         border: solid #444444 1px;
         border-radius: 4px;
         padding: 15px;
         box-shadow: 0px 0px 10px 5px rgba(0,0,0,.25);
         background-color: rgba(0,0,0,.3);
+    }
+
+    .container {
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        width: 95%;
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     input, textarea {
@@ -110,61 +125,6 @@ export default {
         font-weight: bold;
     }
 
-    button {
-        font-family: 'Lato', arial, sans-serif;
-        padding: 20px 15px;
-        width: 100%;
-        border: 0px;
-        outline: none;
-        border-radius: 4px;
-        font-size: 1.75em;
-        font-weight: bold;
-        color: white;
-        cursor: pointer;
-        transition: background-color .2s;
-    }
-
-    button:disabled {
-        cursor: not-allowed;
-        opacity: .75;
-    }
-
-    button.btn-close {
-        width: auto;
-        color: #cfcfcf;
-        padding: 0px;
-        background-color: transparent;
-        transition: color .2s;
-    }
-
-    button.btn-close:hover {
-        color: white;
-    }
-
-    button.btn-sm {
-        padding: 10px 15px;
-        font-size: 1.25em;
-    }
-
-    button.btn-main {
-        background-color: #00a2ff;
-        box-shadow: 0px 0px 15px 0px rgba(0, 162, 255, .5);
-    }
-
-    button.btn-main:hover {
-        background-color: #008cdd;
-    }
-
-    button.btn-default {
-        background-color: #cfcfcf;
-        color: #1d1d1d;
-        box-shadow: 0px 0px 15px 0px rgba(207, 207, 207, .25);
-    }
-
-    button.btn-default:hover {
-        background-color: #bebdbd;
-    }
-
     .text-left {
         text-align: left;
     }
@@ -175,6 +135,10 @@ export default {
 
     .text-right {
         text-align: right;
+    }
+
+    .text-underline {
+        text-decoration: underline;
     }
 
     ul {

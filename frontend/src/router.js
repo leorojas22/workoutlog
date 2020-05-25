@@ -12,13 +12,14 @@ import Dashboard from '@/pages/Dashboard';
 import Workout from '@/pages/Workout';
 import WorkoutExercise from '@/pages/Workout/WorkoutExercise';
 import WorkoutExerciseSet from '@/pages/Workout/WorkoutExerciseSet';
-
+import ManageExercises from '@/pages/Exercise/ManageExercises';
 
 const authenticatedRoutes = [
     'Dashboard',
     'Workout',
     'WorkoutExercise',
-    'WorkoutExerciseSet'
+    'WorkoutExerciseSet',
+    'ManageExercises'
 ];
 
 const router = new Router({
@@ -46,7 +47,13 @@ const router = new Router({
             path: '/workout/:workoutId/exercise/:workoutExerciseId/set/:workoutExerciseSetId?',
             name: 'WorkoutExerciseSet',
             component: WorkoutExerciseSet
+        },
+        {
+            path: '/exercises',
+            name: 'ManageExercises',
+            component: ManageExercises
         }
+
     ]
 });
 

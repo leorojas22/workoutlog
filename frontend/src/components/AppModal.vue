@@ -2,9 +2,9 @@
     <div class="app-modal-component">
         <div class="modal-content-wrapper">
             <div class="text-right">
-                <button class="btn-close" aria-label="close" @click="onClose">
+                <AppButton class="btn-close" aria-label="close" @click="onClose">
                     <span class="fas fa-times"></span>
-                </button>
+                </AppButton>
             </div>
             <slot></slot>
         </div>

@@ -1,6 +1,6 @@
 <template>
-    <section class="app-workout-page">
-        <p>
+    <section class="app-workout-page container">
+        <p v-if="workoutExercises.length > 0">
             <strong>Exercises</strong>
         </p>
         <AppList :interactive="true">
@@ -12,9 +12,17 @@
                 {{ index + 1}}. {{ workoutExercise.exercise.name }}
             </AppListItem>
         </AppList>
-        <AppButton class="btn-main" type="button" @click="onClickAddExercise">
-            Add Exercise
-        </AppButton>
+        <AppLoadingMessage v-if="isLoading" />
+        <div class="form-group">
+            <AppButton class="btn-main" type="button" @click="onClickAddExercise">
+                Add Exercise
+            </AppButton>
+        </div>
+        <div class="form-group">
+            <AppButton class="btn-default" type="button" @click="onClickGoBack">
+                Go Back
+            </AppButton>
+        </div>
     </section>
 </template>
 
@@ -26,10 +34,14 @@ export default {
     },
     data() {
         return {
-            workout: null
+            workout: null,
+            isLoading: false
         };
     },
     methods: {
+        onClickGoBack() {
+            this.$router.push("/");
+        },
         handleRouteChange() {
             // Get the workout details
             let workout = this.$store.getters.getWorkoutById(this.$route.params.id);
@@ -40,8 +52,14 @@ export default {
             }
 
             // Need to load from api
+            this.isLoading = true;
             this.$store.dispatch("loadWorkoutById", this.$route.params.id).then(workout => {
                 this.workout = workout;
+                this.isLoading = false;
+            })
+            .catch(err => {
+                console.error(err);
+                this.isLoading = false;
             });
         },
         onClickAddExercise(e) {

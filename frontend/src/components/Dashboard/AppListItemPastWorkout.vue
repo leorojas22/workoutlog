@@ -1,5 +1,5 @@
 <template>
-    <li class="app-past-workout-component">
+    <li class="app-past-workout-component" @click="onClick">
         <div class="workout-day">
             {{ workoutDay }}
         </div>
@@ -15,24 +15,25 @@ import moment from 'moment';
 export default {
     name: "AppListItemPastWorkout",
     props: {
-        workoutId: {
-            type: Number,
-            required: true
-        },
-        date: {
-            type: Date,
+        workout: {
+            type: Object,
             required: true
         }
     },
     computed: {
         workoutMoment() {
-            return moment(this.date);
+            return moment(new Date(this.workout.createdAt));
         },
         workoutDay() {
-            return this.workoutMoment.format("ddd MMMM Mo");
+            return this.workoutMoment.format("ddd MMMM Do");
         },
         workoutTime() {
             return this.workoutMoment.format("h:mm A");
+        }
+    },
+    methods: {
+        onClick() {
+            this.$emit("click", this.workout.id);
         }
     }
 }

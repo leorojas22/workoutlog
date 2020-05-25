@@ -7,6 +7,7 @@ use App\Entity\WorkoutExercise;
 use App\Service\RestApiService;
 use App\Exception\AccessDeniedException;
 use App\Repository\WorkoutRepository;
+use App\Service\RestApiCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -50,10 +51,18 @@ class WorkoutController extends BaseRestController
     /**
      * @Route("/workout", name="app_workout_get_collection", methods={"GET"})
      */
-    public function getWorkouts(WorkoutRepository $workoutRepository)
+    public function getWorkouts(WorkoutRepository $workoutRepository, Request $request)
     {
-        $workouts = $workoutRepository->findBy(['user' => $this->getUser()]);
 
-        return $this->restService->respond($workouts);
+        $pageNumber = (int) ($request->query->get("page") ?: 1);
+
+        $workoutCollection = new RestApiCollection($workoutRepository);
+        $workoutCollection
+            ->setCriteria(['user' => $this->getUser()])
+            ->setOrderBy(['id' => 'DESC'])
+            ->setPage($pageNumber)
+        ;
+
+        return $this->restService->respond($workoutCollection->getResponseArray());
     }
 }

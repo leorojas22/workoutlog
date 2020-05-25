@@ -7,11 +7,13 @@ Vue.use(Vuex);
 // Api Calls
 import Api from '@/store/api';
 
+import getCopy from '@/helpers/get-copy';
 
-const getCopy = (someObject) => {
-    return JSON.parse(JSON.stringify(someObject));
-};
-
+// Modules
+import exerciseModule from '@/store/exercise';
+const modules = {
+    exercise: exerciseModule
+}
 
 // Mutations
 const SET_USER              = "Set User";
@@ -61,7 +63,7 @@ const actions = {
         commit(SET_USER, user);
         return Promise.resolve();
     },
-    setAuthenticationValues({ commit }) {
+    setAuthenticationValues({ commit, dispatch }) {
 
         // Clear any existing error
         commit(SET_ERROR_MESSAGE, "");
@@ -79,14 +81,18 @@ const actions = {
                     id: response.data.user.id,
                     email: response.data.user.email
                 });
+
+                // If logged in load exercises for user
+                dispatch("exercise/loadExercises");
             }
 
         })
         .catch(error => {
+            console.log(error);
             commit(SET_ERROR_MESSAGE, "Unable to authenticate user!");
         });
     },
-    login({ commit }, credentials) {
+    login({ commit, dispatch }, credentials) {
         // Clear any existing error
         commit(SET_ERROR_MESSAGE, "");
 
@@ -95,6 +101,9 @@ const actions = {
                 id: response.data.id,
                 email: response.data.email
             });
+
+            // Load exercises
+            dispatch("exercise/loadExercises");
         })
         .catch(err => {
             return Promise.reject(err.response.data.message);
@@ -127,6 +136,17 @@ const actions = {
 
         return Promise.resolve(workout);
     },
+    sortWorkouts({ commit, state }) {
+
+        let existingWorkouts = getCopy(state.workouts);
+
+        existingWorkouts.sort((workoutA, workoutB) => {
+            return workoutB.id - workoutA.id;
+        });
+
+        commit(SET_WORKOUTS, existingWorkouts);
+        return Promise.resolve(existingWorkouts);
+    },
     createWorkout({ dispatch }) {
         return Api.workout.create().then(response => {
             return dispatch("addWorkout", response.data);
@@ -138,6 +158,29 @@ const actions = {
     loadWorkoutById({ dispatch }, workoutId) {
         return Api.workout.get(workoutId).then(response => {
             return dispatch("addWorkout", response.data);
+        })
+        .catch(err => {
+            return Promise.reject(err.response.data.message);
+        });
+    },
+    getWorkoutCollection({ commit, state, dispatch }, pageNumber = 1) {
+        return Api.workout.getCollection(pageNumber).then(response => {
+
+            let addWorkoutPromises = [];
+
+            // Add each workout to the state
+            response.data.collection.forEach(workout => {
+                addWorkoutPromises.push(dispatch("addWorkout", workout));
+            });
+
+            return Promise.all(addWorkoutPromises).then(() => {
+                // Sort the workouts
+                return dispatch("sortWorkouts");
+            })
+            .then(() => {
+                return response.data;
+            });
+
         })
         .catch(err => {
             return Promise.reject(err.response.data.message);
@@ -263,5 +306,6 @@ export default new Vuex.Store({
     state,
     mutations,
     actions,
-    getters
+    getters,
+    modules
 });

@@ -1,5 +1,5 @@
 <template>
-    <section class="app-workout-exercise-page" v-if="!isLoading">
+    <section class="app-workout-exercise-page container" v-if="!isLoading">
         <div class="form-group">
             <AppSelect
                 :options="exerciseOptions"
@@ -36,10 +36,10 @@
             </AppList>
         </div>
 
-        <div class="form-group" v-if="selectedExercise">
+        <div class="form-group">
             <hr />
             <div v-if="!isSaving">
-                <div class="form-group">
+                <div class="form-group" v-if="selectedExercise">
                 <AppButton
                         class="btn-main"
                         type="button"
@@ -58,10 +58,7 @@
                     </AppButton>
                 </div>
             </div>
-            <p v-else class="text-center">
-                <i class="fa fa-spinner fa-spin" aria-label="Loading" />
-            </p>
-
+            <AppLoadingMessage v-else />
         </div>
 
         <AppModal v-if="selectedExercise === 0" @close="onCloseAddNewExercise">
@@ -69,7 +66,9 @@
                 <strong>Add New Exercise</strong>
             </p>
             <hr />
-            <AppFormManageExercise />
+            <AppFormManageExercise
+                @savedExercise="onSelectExercise"
+            />
         </AppModal>
 
     </section>
@@ -94,20 +93,6 @@ export default {
     },
     data() {
         return {
-            exerciseOptions: [
-                {
-                    value: 1,
-                    text: "pullups"
-                },
-                {
-                    value: 4,
-                    text: "pushups"
-                },
-                {
-                    value: 0,
-                    text: "Add New Exercise"
-                }
-            ],
             selectedExercise: "",
             workoutExercise: null,
             workoutExerciseSets: [],
@@ -120,6 +105,7 @@ export default {
             this.$router.push("/workout/" + this.$route.params.workoutId);
         },
         handleRouteChange() {
+
             if(this.workoutExerciseId === undefined)
             {
                 // Don't need to load anything if it's a new exercise
@@ -161,7 +147,7 @@ export default {
                 return;
             }
 
-
+            this.selectedExercise = parseInt(exerciseId);
             if(this.workoutExerciseId === undefined)
             {
                 // Need to create new workout exercise
@@ -214,7 +200,25 @@ export default {
             return [];
         },
         workoutExerciseId() {
-            return parseInt(this.$route.params.workoutExerciseId);
+            return !isNaN(this.$route.params.workoutExerciseId) ? parseInt(this.$route.params.workoutExerciseId) : this.$route.params.workoutExerciseId;
+        },
+        exerciseOptions() {
+            const exercises = this.$store.state.exercise.exercises;
+            let exerciseOptions = [];
+
+            exercises.forEach(exercise => {
+                exerciseOptions.push({
+                    value: exercise.id,
+                    text: exercise.name
+                });
+            });
+
+            exerciseOptions.push({
+                value: 0,
+                text: "Add New Exercise"
+            });
+
+            return exerciseOptions;
         }
     },
     watch: {
