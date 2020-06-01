@@ -26,12 +26,12 @@
             </AppList>
         </div>
 
-        <div class="set-totals-wrapper" v-if="statTotals.length > 0">
+        <div class="set-totals-wrapper" v-if="setTotals > 0">
             <hr />
             <p><strong>Totals</strong></p>
             <AppList>
-                <AppListItem v-for="(setTotal, index) in statTotals" :key="index">
-                    {{ setTotal }}
+                <AppListItem>
+                    {{ workoutExercise.exercise.sumStat }}: {{ setTotals }}
                 </AppListItem>
             </AppList>
         </div>
@@ -61,7 +61,38 @@
             <AppLoadingMessage v-else />
         </div>
 
-        <AppModal v-if="selectedExercise === 0" @close="onCloseAddNewExercise">
+        <div class="form-group" v-if="workoutExerciseHistory.length > 0">
+            <p>
+                <strong>Exercise History</strong>
+            </p>
+            <AppList :interactive="true">
+                <AppListItemPastWorkout
+                    v-for="(history, index) in workoutExerciseHistory"
+                    :key="index"
+                    :workout="history.workout"
+                    @click="onClickPastWorkout(history)"
+                />
+            </AppList>
+        </div>
+
+        <div
+            v-if="workoutExercise"
+            class="form-group text-right"
+        >
+            <hr />
+            <AppButton
+                class="btn-danger btn-inline btn-xs"
+                @click="onClickDelete"
+            >
+                <i class="fas fa-trash-alt" aria-label="Delete"></i>
+            </AppButton>
+        </div>
+
+        <AppModal
+            :isVisible="selectedExercise === 0"
+            v-if="selectedExercise === 0"
+            @close="onCloseAddNewExercise"
+        >
             <p class="text-center">
                 <strong>Add New Exercise</strong>
             </p>
@@ -71,14 +102,66 @@
             />
         </AppModal>
 
+        <AppModal
+            :isVisible="selectedWorkoutExerciseHistory ? true : false"
+            v-if="selectedWorkoutExerciseHistory"
+            @close="onCloseWorkoutExerciseHistory"
+        >
+            <p class="text-center">
+                <strong>
+                    {{ selectedWorkoutExerciseHistory.exercise.name }}
+                </strong>
+            </p>
+            <AppList>
+                <AppListItemPastWorkout
+                    :workout="selectedWorkoutExerciseHistory.workout"
+                />
+                <AppListItemWorkoutSet
+                    v-for="(workoutExerciseSet, index) in selectedWorkoutExerciseHistory.workoutExerciseSets"
+                    :key="'workout_set_list_item_' + index"
+                    :workoutExerciseSet="workoutExerciseSet"
+                    :setNumber="index + 1"
+                />
+            </AppList>
+            <div class="set-totals-wrapper" v-if="selectedWorkoutExerciseHistory.setTotals > 0">
+                <hr />
+                <p><strong>Totals</strong></p>
+                <AppList>
+                    <AppListItem>
+                        {{ selectedWorkoutExerciseHistory.exercise.sumStat }}: {{ selectedWorkoutExerciseHistory.setTotals }}
+                    </AppListItem>
+                </AppList>
+            </div>
+            <hr />
+            <AppButton
+                class="btn-default btn-sm"
+                @click="onCloseWorkoutExerciseHistory"
+            >
+                Go Back
+            </AppButton>
+        </AppModal>
+
+        <AppModalConfirm
+            v-if="confirmDelete"
+            :isVisible="confirmDelete"
+            :isLoading="isDeleting"
+            @close="confirmDelete = false"
+            @confirmed="onConfirmDelete"
+        >
+            <p class="text-center">
+                <strong>Are you sure you want to delete this exercise from the workout?</strong>
+            </p>
+        </AppModalConfirm>
     </section>
 </template>
 
 <script>
 import AppSelect from '@/components/AppSelect';
 import AppModal from '@/components/AppModal';
+import AppModalConfirm from '@/components/AppModalConfirm';
 import AppFormManageExercise from '@/components/AppFormManageExercise';
 import AppListItemWorkoutSet from '@/components/WorkoutExercise/AppListItemWorkoutSet';
+import AppListItemPastWorkout from '@/components/Dashboard/AppListItemPastWorkout';
 
 export default {
     name: "WorkoutExercise",
@@ -86,7 +169,9 @@ export default {
         AppSelect,
         AppModal,
         AppFormManageExercise,
-        AppListItemWorkoutSet
+        AppListItemWorkoutSet,
+        AppListItemPastWorkout,
+        AppModalConfirm
     },
     beforeMount() {
         this.handleRouteChange();
@@ -97,10 +182,42 @@ export default {
             workoutExercise: null,
             workoutExerciseSets: [],
             isLoading: false,
-            isSaving: false
+            isSaving: false,
+            workoutExerciseHistory: [],
+            selectedWorkoutExerciseHistory: null,
+            confirmDelete: false,
+            isDeleting: false
         };
     },
     methods: {
+        onConfirmDelete() {
+            if(!this.workoutExercise)
+            {
+                return false;
+            }
+
+            this.isDeleting = true;
+            this.$store.dispatch("deleteWorkoutExercise", this.workoutExercise.id).then(() => {
+                // Reset deleting flag
+                this.isDeleting = false;
+
+                // Redirect back to the workout page
+                this.$router.push("/workout/" + this.workoutExercise.workout.id);
+            })
+            .catch(err => {
+                console.error(err);
+                this.isDeleting = false;
+            });
+        },
+        onClickDelete() {
+            this.confirmDelete = true;
+        },
+        onCloseWorkoutExerciseHistory() {
+            this.selectedWorkoutExerciseHistory = null;
+        },
+        onClickPastWorkout(workoutExercise) {
+            this.selectedWorkoutExerciseHistory = workoutExercise;
+        },
         onClickBack() {
             this.$router.push("/workout/" + this.$route.params.workoutId);
         },
@@ -113,6 +230,20 @@ export default {
                 this.workoutExerciseSets = [];
                 this.workoutExercise     = null;
                 return;
+            }
+
+            // Load workout exercise history
+            let workoutExerciseHistory = this.$store.getters.getWorkoutExerciseHistoryById(this.workoutExerciseId);
+            let workoutHistoryPromise = Promise.resolve();
+            if(workoutExerciseHistory === undefined)
+            {
+                workoutHistoryPromise = this.$store.dispatch("loadWorkoutExerciseHistoryById", this.workoutExerciseId).then(history => {
+                    this.workoutExerciseHistory = history;
+                });
+            }
+            else
+            {
+                this.workoutExerciseHistory = workoutExerciseHistory;
             }
 
             let workoutExercise = this.$store.getters.getWorkoutExerciseById(this.workoutExerciseId);
@@ -196,11 +327,48 @@ export default {
             // @todo
             return true;
         },
-        statTotals() {
-            return [];
-        },
         workoutExerciseId() {
             return !isNaN(this.$route.params.workoutExerciseId) ? parseInt(this.$route.params.workoutExerciseId) : this.$route.params.workoutExerciseId;
+        },
+        setTotals() {
+            if(!this.workoutExercise)
+            {
+                // No exercise found
+                return 0;
+            }
+
+            if(this.workoutExerciseSets.length === 0)
+            {
+                // No sets stored yet
+                return 0;
+            }
+
+            if(!this.workoutExercise.exercise.sumStat)
+            {
+                // No stat to get total for
+                return 0;
+            }
+
+            let sumStat = this.workoutExercise.exercise.sumStat;
+            let sets = this.workoutExerciseSets;
+            let total = 0;
+
+            // Sum up the set totals
+            sets.forEach(exerciseSet => {
+                if(!exerciseSet.stats)
+                {
+                    return;
+                }
+
+                exerciseSet.stats.forEach(stat => {
+                    if(stat[sumStat] !== undefined)
+                    {
+                        total += parseFloat(stat[sumStat]);
+                    }
+                });
+            });
+
+            return total;
         },
         exerciseOptions() {
             const exercises = this.$store.state.exercise.exercises;

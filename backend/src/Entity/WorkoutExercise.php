@@ -12,6 +12,7 @@ use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 /**
  * @ORM\Entity(repositoryClass=WorkoutExerciseRepository::class)
@@ -121,5 +122,52 @@ class WorkoutExercise
     public function getUser()
     {
         return $this->getWorkout()->getUser();
+    }
+
+    /**
+     * @Groups({"api", "workout_exercise", "workout_exercise_set"})
+     * @SerializedName("setTotals")
+     * @return integer
+     */
+    public function getSetTotals(): int
+    {
+        $exercise = $this->getExercise();
+        if(!$exercise)
+        {
+            return 0;
+        }
+
+        $sumStat = $exercise->getSumStat();
+        if(!$sumStat)
+        {
+            return 0;
+        }
+
+        $sets = $this->getWorkoutExerciseSets();
+        if(!$sets)
+        {
+            return 0;
+        }
+
+        $total = 0;
+        foreach($sets as $set)
+        {
+            // Total up the stat that should be summed
+            $stats = $set->getFormattedStats();
+            if(!$stats)
+            {
+                continue;
+            }
+
+            foreach($stats as $stat)
+            {
+                if(!empty($stat[$sumStat]))
+                {
+                    $total += $stat[$sumStat];
+                }
+            }
+        }
+
+        return $total;
     }
 }

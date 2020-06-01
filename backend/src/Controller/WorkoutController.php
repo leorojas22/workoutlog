@@ -65,4 +65,19 @@ class WorkoutController extends BaseRestController
 
         return $this->restService->respond($workoutCollection->getResponseArray());
     }
+
+    /**
+     * @Route("/workout/{id}", name="app_workout_delete", methods={"DELETE"})
+     */
+    public function deleteWorkout(Workout $workout)
+    {
+        if(!$workout->belongsTo($this->getUser()))
+        {
+            throw new AccessDeniedException();
+        }
+
+        $this->restService->deleteEntity($workout);
+
+        return $this->json([]);
+    }
 }

@@ -13,6 +13,8 @@ import Workout from '@/pages/Workout';
 import WorkoutExercise from '@/pages/Workout/WorkoutExercise';
 import WorkoutExerciseSet from '@/pages/Workout/WorkoutExerciseSet';
 import ManageExercises from '@/pages/Exercise/ManageExercises';
+import CreateAccount from '@/pages/CreateAccount';
+
 
 const authenticatedRoutes = [
     'Dashboard',
@@ -52,8 +54,12 @@ const router = new Router({
             path: '/exercises',
             name: 'ManageExercises',
             component: ManageExercises
+        },
+        {
+            path: '/create-account',
+            name: 'CreateAccount',
+            component: CreateAccount
         }
-
     ]
 });
 

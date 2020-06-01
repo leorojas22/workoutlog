@@ -9,6 +9,9 @@ use App\Entity\WorkoutExerciseSet;
 use App\Exception\AccessDeniedException;
 use App\Form\UpdateWorkoutExerciseSetType;
 use App\Repository\ExerciseRepository;
+use App\Repository\WorkoutExerciseRepository;
+use App\Service\RestApiCollection;
+use App\Service\RestApiService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -88,6 +91,26 @@ class WorkoutExerciseController extends BaseRestController
 
 
     /**
+     * @Route("/workout-exercise/{id}/history", name="app_workout_exercise_history_get", methods={"GET"})
+     */
+    public function getWorkoutExerciseHistory(WorkoutExercise $workoutExercise, WorkoutExerciseRepository $workoutExerciseRepository)
+    {
+        if(!$workoutExercise->belongsTo($this->getUser()))
+        {
+            throw new AccessDeniedException();
+        }
+
+        $history = $workoutExerciseRepository->getExerciseHistory($workoutExercise->getExercise(), $workoutExercise->getWorkout());
+        $restApiCollection = new RestApiCollection($workoutExerciseRepository);
+        $restApiCollection
+            ->setLastCollection($history)
+            ->setTotalResults(count($history))
+        ;
+
+        return $this->restService->respond($restApiCollection->getResponseArray());
+    }
+
+    /**
      * @Route("/workout-exercise/{id}", name="app_workout_exercise_get", methods={"GET"})
      */
     public function getWorkoutExercise(WorkoutExercise $workoutExercise)
@@ -99,4 +122,5 @@ class WorkoutExerciseController extends BaseRestController
 
         return $this->restService->respond($workoutExercise);
     }
+
 }

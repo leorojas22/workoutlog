@@ -37,10 +37,20 @@ class RestApiCollection
     {
         if($this->lastCollection !== null)
         {
-            return $this->getLastCollection();
+            return $this->lastCollection;
         }
 
         return $this->getCollection($this->getCriteria(), $this->getOrderBy());
+    }
+
+    /**
+     * @param mixed $collection
+     * @return RestApiCollection
+     */
+    public function setLastCollection($collection): RestApiCollection
+    {
+        $this->lastCollection = $collection;
+        return $this;
     }
 
     /**
@@ -127,6 +137,16 @@ class RestApiCollection
 
         $this->totalResults = (int) $this->repo->count($this->getCriteria());
         return $this->totalResults;
+    }
+
+    /**
+     * @param integer $totalResults
+     * @return RestApiCollection
+     */
+    public function setTotalResults(int $totalResults): RestApiCollection
+    {
+        $this->totalResults = $totalResults;
+        return $this;
     }
 
     /**

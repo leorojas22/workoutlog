@@ -70,6 +70,7 @@ export default {
 <style scoped>
     .app-login-page {
         max-width: 550px;
+        margin-top: 30px;
     }
 
     .app-login-page h2 {

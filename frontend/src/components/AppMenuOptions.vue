@@ -6,14 +6,28 @@
         <router-link to="/exercises" class="menu-option" title="Manage Exercises">
             <i class="fas fa-dumbbell" arial-label="Manage Exercises" />
         </router-link>
-        <div class="menu-option" title="Stopwatch">
+        <div class="menu-option" title="Stopwatch" @click="onClickStopwatch">
             <i class="fas fa-stopwatch" arial-label="Stopwatch" />
         </div>
-        <div class="menu-option" title="Logout">
+        <div class="menu-option" title="Logout" @click="onClickLogout">
             <i class="fas fa-sign-out-alt" arial-label="Logout" />
         </div>
     </div>
 </template>
+
+<script>
+export default {
+    name: "AppMenuOptions",
+    methods: {
+        onClickStopwatch() {
+            this.$emit("showStopwatch", true);
+        },
+        onClickLogout() {
+            this.$emit("logout");
+        }
+    }
+}
+</script>
 
 <style scoped>
     .app-menu-options-component {

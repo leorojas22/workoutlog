@@ -10,7 +10,12 @@
                 <span class="fas fa-pencil-alt"></span>
             </div>
         </div>
-        <AppModal class="option-list-wrapper" v-if="isOpen" @close="toggleOpenClose(false)">
+        <AppModal
+            class="option-list-wrapper"
+            v-if="isOpen"
+            @close="toggleOpenClose(false)"
+            :isVisible="isOpen"
+        >
             <label class="text-center">
                 {{ placeholder }}
             </label>

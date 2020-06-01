@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\Exercise;
+use App\Entity\Workout;
 use App\Entity\WorkoutExercise;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -17,6 +19,19 @@ class WorkoutExerciseRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, WorkoutExercise::class);
+    }
+
+    public function getExerciseHistory(Exercise $exercise, Workout $workout)
+    {
+        return $this->createQueryBuilder('w')
+            ->andWhere('w.exercise = :exercise')
+            ->andWhere('w.workout < :workout')
+            ->setParameter('exercise', $exercise)
+            ->setParameter('workout', $workout)
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult()
+        ;
     }
 
     // /**

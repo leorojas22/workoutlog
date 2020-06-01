@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Helper\AuthToken;
 use App\Form\CreateUserType;
 use App\Helper\FormValidator;
+use App\Helper\JwtHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -80,6 +81,19 @@ class SecurityController extends BaseController
                 'id' => $this->getUser()->getId(),
                 'email' => $this->getUser()->getEmail()
             ] : null
+        ]);
+    }
+
+    /**
+     * @Route("/logout", name="app_logout", methods={"GET"})
+     */
+    public function logout()
+    {
+        // Delete the jwt token
+        JwtHelper::removeJWTCookie();
+
+        return $this->json([
+            'result' => true
         ]);
     }
 }

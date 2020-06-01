@@ -21,6 +21,7 @@ const SET_AUTH_TOKEN        = "Set Auth Token";
 const SET_ERROR_MESSAGE     = "Set Error Message";
 const SET_WORKOUTS          = "Set Workouts";
 const SET_WORKOUT_EXERCISES = "Set Workout Exercises";
+const SET_WORKOUT_EXERCISE_HISTORY = "Set Workout Exercise History";
 
 // State
 const state = {
@@ -31,7 +32,8 @@ const state = {
     authToken: "",
     errorMessage: "",
     workouts: [],
-    workoutExercises: []
+    workoutExercises: [],
+    workoutExerciseHistory: []
 };
 
 
@@ -54,6 +56,9 @@ const mutations = {
     },
     [SET_WORKOUT_EXERCISES](state, workoutExercises) {
         state.workoutExercises = workoutExercises;
+    },
+    [SET_WORKOUT_EXERCISE_HISTORY](state, workoutExerciseHistory) {
+        state.workoutExerciseHistory = workoutExerciseHistory;
     }
 };
 
@@ -186,11 +191,11 @@ const actions = {
             return Promise.reject(err.response.data.message);
         });
     },
-    addWorkoutExercise({ commit, state, getters }, workoutExercise) {
+    addWorkoutExercise({ commit, state }, workoutExercise) {
         let existingWorkoutExercises = getCopy(state.workoutExercises);
 
         let foundWorkoutExerciseIndex = existingWorkoutExercises.findIndex(existingWorkoutExercise => {
-            return existingWorkoutExercise.id === workoutExercise.id;
+            return parseInt(existingWorkoutExercise.id) === parseInt(workoutExercise.id);
         });
 
         if(foundWorkoutExerciseIndex === -1)
@@ -202,6 +207,9 @@ const actions = {
             existingWorkoutExercises[foundWorkoutExerciseIndex] = workoutExercise;
             console.log(existingWorkoutExercises);
         }
+
+        // Clear workouts so it reloads
+        commit(SET_WORKOUTS, []);
 
         commit(SET_WORKOUT_EXERCISES, existingWorkoutExercises);
         return Promise.resolve(workoutExercise);
@@ -280,8 +288,101 @@ const actions = {
             console.log(err);
             return Promise.reject(err.response.data.message);
         });
-    }
+    },
+    setWorkoutExerciseHistory({ commit }, workoutExerciseHistory) {
+        commit(SET_WORKOUT_EXERCISE_HISTORY, workoutExerciseHistory);
+        return Promise.resolve();
+    },
+    loadWorkoutExerciseHistoryById({ dispatch, state }, workoutExerciseId) {
+        return Api.workoutExercise.getHistory(workoutExerciseId).then(response => {
+            // Check to see if we already have this workout exercise stored in the state
+            let existingWorkoutExerciseHistory = getCopy(state.workoutExerciseHistory);
 
+            let foundHistoryIndex = existingWorkoutExerciseHistory.findIndex(history => {
+                return parseInt(history.id) === parseInt(workoutExerciseId);
+            });
+
+            if(foundHistoryIndex === -1)
+            {
+                // New history, add to state
+
+                existingWorkoutExerciseHistory.push(response.data.collection);
+                return dispatch("setWorkoutExerciseHistory", existingWorkoutExerciseHistory).then(() => {
+                    return response.data.collection;
+                });
+            }
+
+            // History for this is already in the state, replace it with the updated one
+            existingWorkoutExerciseHistory[foundHistoryIndex] = response.data.collection;
+
+            return dispatch("setWorkoutExerciseHistory", existingWorkoutExerciseHistory).then(() => {
+                return response.data.collection;
+            })
+        })
+        .catch(err => {
+            console.log(err);
+            return Promise.reject(err.response.data.message);
+        });
+    },
+    deleteWorkout({ commit, state }, workoutId) {
+        return Api.workout.delete(workoutId).then(() => {
+            // Remove the workout from the list
+            let existingWorkouts = getCopy(state.workouts);
+
+            // Find the workout
+            let index = existingWorkouts.findIndex(workout => {
+                return workout.id === parseInt(workoutId);
+            });
+
+            if(index !== -1)
+            {
+                // Remove it from the list
+                existingWorkouts.splice(index, 1);
+            }
+
+            commit(SET_WORKOUTS, existingWorkouts);
+            return Promise.resolve(existingWorkouts);
+        });
+    },
+    deleteWorkoutExercise({ commit, dispatch, state }, workoutExerciseId) {
+        return Api.workoutExercise.delete(workoutExerciseId).then(() => {
+            // Delete the exercise from the store
+            let existingWorkoutExercises = getCopy(state.workoutExercises);
+
+            let index = existingWorkoutExercises.findIndex(workoutExercise => {
+                return parseInt(workoutExercise.id) === parseInt(workoutExerciseId);
+            });
+
+            if(index !== undefined)
+            {
+                // Remove from the existing workouts list
+                existingWorkoutExercises.splice(index, 1);
+            }
+
+            // Clear out workouts to reset workouts store
+            commit(SET_WORKOUTS, []);
+
+            // Update the existing workout exercises
+            commit(SET_WORKOUT_EXERCISES, existingWorkoutExercises);
+
+            return Promise.resolve(existingWorkoutExercises);
+        })
+        .catch(err => {
+            return Promise.reject(err.response.data.message);
+        })
+    },
+    logout({ dispatch }) {
+        return Api.user.logout().then(() => {
+            return dispatch("setUser", {
+                id: 0,
+                email: ""
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            return Promise.reject("Unable to logout at this time.");
+        });
+    }
 };
 
 const getters = {
@@ -297,6 +398,13 @@ const getters = {
             // Check to see if the workout exercise is stored already
             return state.workoutExercises.find(workoutExercise => {
                 return workoutExercise.id === parseInt(id);
+            });
+        };
+    },
+    getWorkoutExerciseHistoryById(state) {
+        return (id) => {
+            return state.workoutExerciseHistory.find(history => {
+                return history.id === parseInt(id);
             });
         };
     }

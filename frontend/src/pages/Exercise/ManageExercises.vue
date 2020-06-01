@@ -33,7 +33,11 @@
             </AppListItem>
         </AppList>
 
-        <AppModal v-if="editingExercise !== null" @close="onCloseEditExercise">
+        <AppModal
+            v-if="editingExercise !== null"
+            @close="onCloseEditExercise"
+            :isVisible="editingExercise !== null"
+        >
             <p class="text-center">
                 <strong>Edit Exercise</strong>
             </p>
@@ -44,7 +48,13 @@
             />
         </AppModal>
 
-        <AppModal v-if="deletingExercise !== null" @close="onCloseDeleteExercise">
+        <AppModalConfirm
+            v-if="deletingExercise !== null"
+            :isVisible="deletingExercise !== null"
+            @close="onCloseDeleteExercise"
+            :isLoading="isDeleting"
+            @confirmed="onClickConfirmDelete"
+        >
             <p class="text-center">
                 <strong>Delete Exercise</strong>
             </p>
@@ -52,34 +62,21 @@
             <div class="form-group h3 text-center">
                 Are you sure you want to delete <strong class="text-underline">{{ this.deletingExercise.name }}</strong>?
             </div>
-            <div class="form-group text-center delete-actions">
-                <AppButton
-                    class="btn-danger btn-inline btn-sm"
-                    @click="onClickConfirmDelete"
-                    :isLoading="isDeleting"
-                >
-                    Yes
-                </AppButton>
-                <AppButton
-                    class="btn-default btn-inline btn-sm"
-                    @close="onCloseDeleteExercise"
-                >
-                    No
-                </AppButton>
-            </div>
-        </AppModal>
+        </AppModalConfirm>
 
     </section>
 </template>
 
 <script>
 import AppModal from '@/components/AppModal';
+import AppModalConfirm from '@/components/AppModalConfirm';
 import AppFormManageExercise from '@/components/AppFormManageExercise';
 export default {
     name: "ManageExercises",
     components: {
         AppModal,
-        AppFormManageExercise
+        AppFormManageExercise,
+        AppModalConfirm
     },
     data() {
         return {

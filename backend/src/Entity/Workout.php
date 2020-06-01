@@ -100,7 +100,7 @@ class Workout
     }
 
     /**
-     * @Groups({"api", "workout"})
+     * @Groups({"api", "workout", "workout_exercise"})
      * @SerializedName("createdAt")
      */
     public function getCreatedAtApi()

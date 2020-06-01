@@ -4,18 +4,51 @@
             <h1>
                 Workout Log
             </h1>
-            <AppMenuOptions />
+            <AppMenuOptions
+                v-if="isLoggedIn"
+                @showStopwatch="showStopwatch = true"
+                @logout="onLogout"
+            />
         </header>
         <router-view></router-view>
+        <AppStopwatch
+            v-show="showStopwatch"
+            :isVisible="showStopwatch"
+            @close="showStopwatch = false"
+        />
     </div>
 </template>
 
 <script>
 import AppMenuOptions from '@/components/AppMenuOptions';
+import AppModal from '@/components/AppModal';
+import AppStopwatch from '@/components/AppStopwatch';
 export default {
     name: 'App',
     components: {
-        AppMenuOptions
+        AppMenuOptions,
+        AppModal,
+        AppStopwatch
+    },
+    data() {
+        return {
+            showStopwatch: false
+        };
+    },
+    computed: {
+        isLoggedIn() {
+            return this.$store.state.user.id ? true : false;
+        }
+    },
+    methods: {
+        onLogout() {
+            this.$store.dispatch("logout").then(() => {
+                this.$router.push("/login");
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        }
     }
 }
 </script>
@@ -30,6 +63,10 @@ export default {
         background-image: url('/assets/images/bg.png');
         color: white;
         font-size: 18px;
+    }
+
+    body.modal-open {
+        position: fixed;
     }
 
     a {

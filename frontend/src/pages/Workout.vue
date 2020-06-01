@@ -23,22 +23,67 @@
                 Go Back
             </AppButton>
         </div>
+        <hr />
+        <div class="form-group text-right">
+            <AppButton
+                class="btn-danger btn-xs btn-inline"
+                @click="onClickDelete"
+            >
+                <i class="fas fa-trash-alt" aria-label="Delete"></i>
+            </AppButton>
+        </div>
+
+        <AppModalConfirm
+            v-if="confirmDelete"
+            :isVisible="confirmDelete"
+            :isLoading="isDeleting"
+            @close="confirmDelete = false"
+            @confirmed="onClickDeleteConfirm"
+        >
+            <p class="text-center">
+                <strong>Are you sure you want to delete this workout?</strong>
+            </p>
+        </AppModalConfirm>
     </section>
 </template>
 
 <script>
+import AppModalConfirm from '@/components/AppModalConfirm';
+
 export default {
     name: "Workout",
+    components: {
+        AppModalConfirm
+    },
     beforeMount() {
         this.handleRouteChange();
     },
     data() {
         return {
             workout: null,
-            isLoading: false
+            isLoading: false,
+            confirmDelete: false,
+            isDeleting: false
         };
     },
     methods: {
+        onClickDeleteConfirm() {
+            this.isDeleting = true;
+            this.$store.dispatch("deleteWorkout", this.workout.id).then(() => {
+                // Redirect to dashboard after deleting
+                this.isDeleting = false;
+                this.confirmDelete = false;
+                this.$router.push("/");
+            })
+            .catch(err => {
+                this.isDeleting = false;
+                this.confirmDelete = false;
+                console.error(err);
+            });
+        },
+        onClickDelete() {
+            this.confirmDelete = true;
+        },
         onClickGoBack() {
             this.$router.push("/");
         },

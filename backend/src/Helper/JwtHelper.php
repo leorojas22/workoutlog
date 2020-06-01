@@ -30,7 +30,7 @@ class JwtHelper
     protected static function applyJWT(int $userId, string $email): string
     {
         // Expire time
-        $expTime = time()+(3600*3);
+        $expTime = time()+(3600*24);
 
         $tokenPayload = [
             'userId' => $userId,
@@ -43,6 +43,12 @@ class JwtHelper
         setcookie("jwt", $jwt, $expTime, "/", getenv("SITE_DOMAIN"), getenv("APP_ENV") === "prod", true);
 
         return $jwt;
+    }
+
+    public static function removeJWTCookie()
+    {
+        // Set the cookie so it would be expired
+        setcookie("jwt", null, time() - 3600, "/", getenv("SITE_DOMAIN"), getenv("APP_ENV") === "prod", true);
     }
 
     /**
@@ -59,7 +65,7 @@ class JwtHelper
             $decoded = JWT::decode($jwt, getenv("JWT_SECRET"), ['HS256']);
 
             // Successfully decoded token, check if it is expiring soon
-            if($decoded->exp-time() < 3600)
+            if($decoded->exp-time() < (3600*12))
             {
                 // Token is expiring in 1 hour, refresh it to prevent an abrupt logout
                 static::applyJWT($decoded->userId, $decoded->email);

@@ -1,7 +1,7 @@
 <template>
-    <div class="app-modal-component">
+    <div class="app-modal-component" v-if="isVisible">
         <div class="modal-content-wrapper">
-            <div class="text-right">
+            <div class="text-right" v-if="showCloseButton">
                 <AppButton class="btn-close" aria-label="close" @click="onClose">
                     <span class="fas fa-times"></span>
                 </AppButton>
@@ -14,9 +14,59 @@
 <script>
 export default {
     name: "AppModal",
+    props: {
+        showCloseButton: {
+            type: Boolean,
+            default: true
+        },
+        isVisible: {
+            type: Boolean,
+            default: false
+        }
+    },
+    watch: {
+        isVisible: function(isVisible) {
+            if(isVisible && !document.body.classList.contains("modal-open"))
+            {
+                document.body.classList.add("modal-open");
+                return;
+            }
+
+            if(!isVisible && document.body.classList.contains("modal-open"))
+            {
+                document.body.classList.remove("modal-open");
+                return;
+            }
+        }
+    },
+    updated() {
+        this.toggleBodyClass();
+    },
+    beforeDestroy() {
+        this.toggleBodyClass(false);
+    },
+    beforeMount() {
+        this.toggleBodyClass();
+    },
     methods: {
         onClose() {
             this.$emit("close");
+        },
+        toggleBodyClass(isVisibleOverride = null) {
+
+            let isVisible = isVisibleOverride !== null ? isVisibleOverride : this.isVisible;
+
+            if(isVisible && !document.body.classList.contains("modal-open"))
+            {
+                document.body.classList.add("modal-open");
+                return;
+            }
+
+            if(!isVisible && document.body.classList.contains("modal-open"))
+            {
+                document.body.classList.remove("modal-open");
+                return;
+            }
         }
     }
 }
